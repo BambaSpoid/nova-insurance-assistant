@@ -1,0 +1,27 @@
+# Environnement Python
+.venv/
+
+# Fichiers Python générés
+__pycache__/
+*.py[cod]
+
+# Outils de test et de qualité
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets et configuration locale
+.env
+.streamlit/secrets.toml
+
+# Index et bases générés
+data/index/
+*.db
+
+# macOS
+.DS_Store
+
+# Compétences Streamlit locales
+.agents/skills/developing-with-streamlit
+.claude/skills/developing-with-streamlit

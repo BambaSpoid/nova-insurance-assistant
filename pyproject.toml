@@ -1,0 +1,41 @@
+[project]
+name = "nova-insurance-assistant"
+version = "0.1.0"
+description = "Assistant documentaire RAG sur des contrats d'assurance synthétiques"
+authors = [
+    {name = "Mouhamadou Bamba Diop",email = "bambaspoid@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "streamlit (>=1.62.0,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [
+    { include = "nova_assistant", from = "src" }
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.1.1"
+ruff = "^0.16.4"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nova_assistant"]
