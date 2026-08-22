@@ -25,3 +25,6 @@ data/index/
 # Compétences Streamlit locales
 .agents/skills/developing-with-streamlit
 .claude/skills/developing-with-streamlit
+
+# Rendus PDF temporaires
+tmp/
