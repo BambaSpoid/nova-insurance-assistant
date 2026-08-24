@@ -81,3 +81,12 @@ def test_generated_pdfs_are_readable() -> None:
         assert len(extracted_text.strip()) >= 500
         assert "NOVA ASSURANCES" in extracted_text
         assert "Document fictif - démonstration technique" in extracted_text
+
+
+def test_auto_2025_assistance_wording_is_consistent() -> None:
+    source_path = Path("data/corpus/source/auto/2025/nova_auto_ipid_2025.md")
+    text = source_path.read_text(encoding="utf-8")
+
+    assert "assistance : disponible **dès le domicile**" in text
+    assert "Dès le domicile du" not in text
+    assert "du domicile**" not in text

@@ -462,6 +462,7 @@ def generate_pdf(source_path: Path) -> Path:
         title=extract_title(text),
         author="Nova Assurances - données synthétiques",
         subject="Corpus documentaire synthétique",
+        invariant=1,
     )
 
     decorator = page_decorator(source_path.name)

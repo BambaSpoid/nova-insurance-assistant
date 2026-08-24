@@ -34,8 +34,7 @@ Les garanties principales sont :
 ### Limites principales
 
 - franchise collision : **350 € par sinistre** ;
-- assistance : disponible lorsque le véhicule se trouve à **Dès le domicile du
-  domicile** ;
+- assistance : disponible **dès le domicile** ;
 - véhicule de remplacement : **10 jours au maximum** ;
 - effets personnels laissés dans le véhicule : **1 000 € au maximum**.
 
