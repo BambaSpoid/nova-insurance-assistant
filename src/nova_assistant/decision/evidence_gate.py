@@ -20,6 +20,31 @@ VALUE_PATTERN = re.compile(
     r"(?=\s|$|[.,;:])"
 )
 
+NUMBER_WORDS = {
+    "zero": "0",
+    "un": "1",
+    "une": "1",
+    "deux": "2",
+    "trois": "3",
+    "quatre": "4",
+    "cinq": "5",
+    "six": "6",
+    "sept": "7",
+    "huit": "8",
+    "neuf": "9",
+    "dix": "10",
+    "onze": "11",
+    "douze": "12",
+    "treize": "13",
+    "quatorze": "14",
+    "quinze": "15",
+    "seize": "16",
+}
+
+QUERY_TERM_EXPANSIONS = {
+    "vol": ("transport",),
+}
+
 STOPWORDS = {
     "a",
     "ai",
@@ -65,6 +90,9 @@ STOPWORDS = {
     "une",
     "assurance",
     "contrat",
+    "applique",
+    "appliquee",
+    "apres",
 }
 
 ABSENCE_MARKERS = (
@@ -78,6 +106,8 @@ ABSENCE_MARKERS = (
     "ne fournit aucune information",
     "pas decrit dans le present corpus",
     "pas decrite dans le present corpus",
+    "n est pas present",
+    "n est pas presente",
 )
 
 
@@ -98,6 +128,9 @@ def extract_query_terms(question: str) -> tuple[str, ...]:
     terms: list[str] = []
 
     for token in TOKEN_PATTERN.findall(normalized_question):
+        if len(token) < 2:
+            continue
+
         if token in STOPWORDS:
             continue
 
@@ -115,17 +148,19 @@ def find_absence_markers(
     texts: tuple[str, ...],
 ) -> tuple[str, ...]:
     found_markers: list[str] = []
+    query_term_set = set(query_terms)
 
     for text in texts:
-        normalized_text = normalize_text(text)
-        text_tokens = set(TOKEN_PATTERN.findall(normalized_text))
+        for raw_clause in CLAUSE_PATTERN.split(text):
+            clause = normalize_text(raw_clause)
+            clause_tokens = set(TOKEN_PATTERN.findall(clause))
 
-        if query_terms and not set(query_terms).intersection(text_tokens):
-            continue
+            if query_term_set and not query_term_set.intersection(clause_tokens):
+                continue
 
-        for marker in ABSENCE_MARKERS:
-            if marker in normalized_text and marker not in found_markers:
-                found_markers.append(marker)
+            for marker in ABSENCE_MARKERS:
+                if marker in clause and marker not in found_markers:
+                    found_markers.append(marker)
 
     return tuple(
         marker
@@ -136,30 +171,96 @@ def find_absence_markers(
     )
 
 
+def value_unit(value: str) -> str:
+    normalized_value = normalize_text(value)
+
+    if "€" in value or "euro" in normalized_value:
+        return "money"
+
+    if "jour" in normalized_value:
+        return "day"
+
+    if "heure" in normalized_value:
+        return "hour"
+
+    if "intervention" in normalized_value:
+        return "intervention"
+
+    return "other"
+
+
 def find_conflicting_values(
     query_terms: tuple[str, ...],
     texts: tuple[str, ...],
 ) -> tuple[str, ...]:
-    values: list[str] = []
+    query_term_set = set(query_terms)
+    for query_term in query_terms:
+        query_term_set.update(
+            QUERY_TERM_EXPANSIONS.get(
+                query_term,
+                (),
+            )
+        )
+    query_numbers = {term for term in query_terms if term.isdigit()}
+    query_numbers.update(NUMBER_WORDS[term] for term in query_terms if term in NUMBER_WORDS)
+
+    candidates: list[tuple[int, str]] = []
 
     for text in texts:
         for raw_clause in CLAUSE_PATTERN.split(text):
             clause = normalize_text(raw_clause)
             clause_tokens = set(TOKEN_PATTERN.findall(clause))
+            overlap = len(query_term_set.intersection(clause_tokens))
 
-            if not set(query_terms).intersection(clause_tokens):
+            if overlap == 0:
                 continue
 
-            for value in VALUE_PATTERN.findall(clause):
-                canonical_value = re.sub(r"\s+", " ", value).strip()
+            values = tuple(
+                dict.fromkeys(
+                    re.sub(r"\s+", " ", value).strip() for value in VALUE_PATTERN.findall(clause)
+                )
+            )
 
-                if canonical_value not in values:
-                    values.append(canonical_value)
+            # Une clause contenant plusieurs valeurs, comme un
+            # tableau aplati, ne permet pas une association fiable.
+            if len(values) != 1:
+                continue
 
-    if len(values) <= 1:
+            value = values[0]
+            number_match = re.match(
+                r"\d{1,3}(?:[ .]\d{3})*",
+                value,
+            )
+            value_number = (
+                number_match.group(0).replace(" ", "").replace(".", "") if number_match else None
+            )
+
+            # La valeur décrivant le scénario de la question
+            # n’est pas une valeur contractuelle contradictoire.
+            if value_number in query_numbers:
+                continue
+
+            candidates.append((overlap, value))
+
+    if not candidates:
         return ()
 
-    return tuple(values)
+    best_overlap = max(overlap for overlap, _ in candidates)
+    best_values = tuple(value for overlap, value in candidates if overlap == best_overlap)
+
+    values_by_unit: dict[str, list[str]] = {}
+
+    for value in best_values:
+        unit = value_unit(value)
+        unit_values = values_by_unit.setdefault(
+            unit,
+            [],
+        )
+
+        if value not in unit_values:
+            unit_values.append(value)
+
+    return tuple(value for values in values_by_unit.values() if len(values) > 1 for value in values)
 
 
 def evaluate_evidence(

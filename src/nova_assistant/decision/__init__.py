@@ -9,6 +9,7 @@ from nova_assistant.decision.evidence_gate import (
     find_absence_markers,
     find_conflicting_values,
     normalize_text,
+    value_unit,
 )
 from nova_assistant.decision.models import (
     AssistantResponse,
@@ -34,4 +35,5 @@ __all__ = [
     "find_absence_markers",
     "find_conflicting_values",
     "normalize_text",
+    "value_unit",
 ]

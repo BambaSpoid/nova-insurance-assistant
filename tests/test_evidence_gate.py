@@ -7,7 +7,10 @@ from nova_assistant.decision import (
     EvidenceGateConfig,
     evaluate_evidence,
     extract_query_terms,
+    find_absence_markers,
+    find_conflicting_values,
     normalize_text,
+    value_unit,
 )
 from nova_assistant.domain import ProductType
 from nova_assistant.filtering import (
@@ -371,3 +374,103 @@ def test_answer_service_rejects_invalid_source_limit() -> None:
             assert "entre 1 et 10" in str(error)
         else:
             raise AssertionError("Une limite de sources invalide aurait dû être rejetée.")
+
+
+def test_conflicting_values_ignore_unrelated_value_after_event() -> None:
+    question_terms = extract_query_terms("Quelle est la franchise appliquée après une collision ?")
+
+    conflicting_values = find_conflicting_values(
+        query_terms=question_terms,
+        texts=(
+            "Franchise collision : 350 € par sinistre ; "
+            "véhicule de remplacement après un sinistre couvert : "
+            "10 jours au maximum.",
+        ),
+    )
+
+    assert question_terms == ("franchise", "collision")
+    assert conflicting_values == ()
+
+
+def test_absence_marker_ignores_unrelated_clause() -> None:
+    markers = find_absence_markers(
+        query_terms=("objets", "valeur"),
+        texts=(
+            "Les objets de valeur sont couverts jusqu’à 5 000 €. "
+            "Le corpus ne contient aucune règle relative aux impôts.",
+        ),
+    )
+
+    assert markers == ()
+
+
+def test_conflicting_values_separate_value_units() -> None:
+    values = find_conflicting_values(
+        query_terms=(
+            "relogement",
+            "temporaire",
+            "jour",
+        ),
+        texts=("Relogement temporaire : 150 € par jour pendant 15 jours.",),
+    )
+
+    assert values == ()
+    assert value_unit("150 €") == "money"
+    assert value_unit("15 jours") == "day"
+
+
+def test_conflicting_values_ignore_flattened_table() -> None:
+    values = find_conflicting_values(
+        query_terms=(
+            "frais",
+            "medicaux",
+            "urgence",
+        ),
+        texts=("Frais médicaux d’urgence 100 000 € Annulation 5 000 € Bagages 1 500 €.",),
+    )
+
+    assert values == ()
+
+
+def test_conflicting_values_ignore_question_scenario() -> None:
+    question_terms = extract_query_terms("Mes bagages ont quatre heures de retard.")
+
+    values = find_conflicting_values(
+        query_terms=question_terms,
+        texts=(
+            "La garantie intervient après 12 heures. "
+            "Un retard de 4 heures ne dépasse pas ce seuil.",
+        ),
+    )
+
+    assert values == ()
+
+
+def test_absence_marker_detects_information_not_present() -> None:
+    markers = find_absence_markers(
+        query_terms=("vaccins", "obligatoires"),
+        texts=(
+            "Quels vaccins sont obligatoires ? "
+            "Cette information n’est pas présente "
+            "dans les documents.",
+        ),
+    )
+
+    assert "n est pas presente" in markers
+
+
+def test_conflicting_values_distinguish_transport_from_baggage() -> None:
+    query_terms = extract_query_terms("Mon vol a cinq heures de retard, suis-je indemnisé ?")
+
+    values = find_conflicting_values(
+        query_terms=query_terms,
+        texts=(
+            "La garantie retard de bagages intervient "
+            "après 12 heures. "
+            "La garantie retard de transport intervient "
+            "après 6 heures. "
+            "Un retard de 5 heures ne dépasse pas ce seuil.",
+        ),
+    )
+
+    assert values == ()

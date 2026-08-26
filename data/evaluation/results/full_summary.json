@@ -1,0 +1,93 @@
+{
+  "average_retrieval_duration_ms": 299.8887500000213,
+  "average_total_duration_ms": 1528.1864179999804,
+  "by_category": {
+    "conflicting_context": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 1,
+      "total": 1
+    },
+    "direct_answer": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5
+    },
+    "exclusion": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 2,
+      "total": 2
+    },
+    "missing_context": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 3,
+      "total": 3
+    },
+    "missing_corpus": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 1,
+      "total": 1
+    },
+    "missing_information": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 2,
+      "total": 2
+    },
+    "restriction": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 4,
+      "total": 4
+    },
+    "version_difference": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 12,
+      "total": 12
+    }
+  },
+  "by_product": {
+    "auto": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 10,
+      "total": 10
+    },
+    "home": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 10,
+      "total": 10
+    },
+    "travel": {
+      "failed": 0,
+      "pass_rate": 1.0,
+      "passed": 10,
+      "total": 10
+    }
+  },
+  "citation_checks_passed": 30,
+  "evidence_checks_passed": 30,
+  "failed": 0,
+  "forbidden_terms_checks_passed": 30,
+  "generated_answers": 23,
+  "mode": "full",
+  "observed_status_counts": {
+    "answered": 23,
+    "clarification_required": 3,
+    "conflicting_context": 1,
+    "insufficient_evidence": 2,
+    "no_matching_corpus": 1
+  },
+  "pass_rate": 1.0,
+  "passed": 30,
+  "retrieval_scope_checks_passed": 30,
+  "selection_checks_passed": 30,
+  "status_checks_passed": 30,
+  "total": 30
+}
