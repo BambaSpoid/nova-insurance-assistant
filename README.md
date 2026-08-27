@@ -31,6 +31,9 @@ refuse la génération selon des signaux de preuve externes au modèle.
 
 ## Architecture
 
+![Blueprint end-to-end de Nova Insurance Assistant](docs/assets/nova-rag-architecture.png)
+
+
 ```mermaid
 flowchart LR
     A[Catalogue documentaire] --> B[Ingestion PDF]
