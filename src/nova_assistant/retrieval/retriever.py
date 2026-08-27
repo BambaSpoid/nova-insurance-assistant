@@ -15,6 +15,7 @@ from nova_assistant.filtering import (
 from nova_assistant.indexing import (
     SentenceTransformerEmbedder,
     VectorIndex,
+    build_semantic_index,
     file_sha256,
     load_semantic_index,
 )
@@ -105,3 +106,13 @@ def load_default_retriever() -> Retriever:
         index=index,
         embedder_factory=lambda: SentenceTransformerEmbedder(model_name=manifest.model_name),
     )
+
+
+def load_or_build_default_retriever() -> Retriever:
+    """Construit l’index absent avant de charger le retriever."""
+
+    try:
+        return load_default_retriever()
+    except FileNotFoundError:
+        build_semantic_index()
+        return load_default_retriever()

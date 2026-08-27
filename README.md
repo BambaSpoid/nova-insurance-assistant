@@ -33,7 +33,6 @@ refuse la génération selon des signaux de preuve externes au modèle.
 
 ![Blueprint end-to-end de Nova Insurance Assistant](docs/assets/nova-rag-architecture.png)
 
-
 ```mermaid
 flowchart LR
     A[Catalogue documentaire] --> B[Ingestion PDF]
@@ -184,6 +183,35 @@ est ignoré par Git.
 
 Ne placez jamais une vraie clé dans le code, le README, un commit ou une
 capture d’écran.
+
+## Déployer sur Streamlit Community Cloud
+
+L’application peut être déployée directement depuis GitHub. L’index vectoriel
+n’est pas suivi par Git : il est automatiquement construit lors du premier
+démarrage, puis conservé dans le cache de l’application.
+
+1. Ouvrez [Streamlit Community Cloud](https://share.streamlit.io/) et
+   connectez votre compte GitHub.
+2. Créez une application à partir du dépôt
+   `BambaSpoid/nova-insurance-assistant`.
+3. Sélectionnez la branche `main` et le fichier principal `app.py`.
+4. Dans les paramètres avancés, choisissez Python 3.12.
+5. Ajoutez la clé dans les secrets Streamlit :
+
+```toml
+OPENAI_API_KEY = "votre-cle-openai"
+```
+
+La clé ne doit jamais être ajoutée au dépôt, au README ou à un fichier suivi
+par Git. Le fichier local `.streamlit/secrets.toml` est volontairement ignoré.
+
+Le premier démarrage peut prendre quelques minutes, car le modèle
+Sentence Transformers est téléchargé et l’index des documents est construit.
+Les redémarrages suivants réutilisent les ressources mises en cache.
+
+Pour partager la démonstration avec des personnes qui n’ont pas accès au dépôt
+privé, configurez séparément la visibilité publique de l’application depuis
+les paramètres Streamlit.
 
 ## Évaluation
 

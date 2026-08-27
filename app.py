@@ -11,7 +11,9 @@ from nova_assistant.decision import AssistantResponse
 from nova_assistant.domain import ProductType
 from nova_assistant.filtering import SelectionRequest
 from nova_assistant.generation import OpenAIGenerator
-from nova_assistant.retrieval import load_default_retriever
+from nova_assistant.retrieval import (
+    load_or_build_default_retriever,
+)
 from nova_assistant.ui import (
     ConversationEntry,
     MissingGenerationCredentialError,
@@ -52,9 +54,9 @@ def resolve_openai_api_key() -> str | None:
     return str(secret_key)
 
 
-@st.cache_resource(show_spinner="Chargement de l’index documentaire…")
+@st.cache_resource(show_spinner="Préparation de l’index documentaire…")
 def get_retriever():
-    return load_default_retriever()
+    return load_or_build_default_retriever()
 
 
 @st.cache_resource

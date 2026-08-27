@@ -1,10 +1,12 @@
 from datetime import date
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 from pydantic import ValidationError
 
+import nova_assistant.retrieval.retriever as retriever_module
 from nova_assistant.domain import ProductType, load_catalog
 from nova_assistant.filtering import (
     SelectionRequest,
@@ -21,6 +23,7 @@ from nova_assistant.retrieval import (
     RetrievalResult,
     RetrievalStatus,
     Retriever,
+    load_or_build_default_retriever,
 )
 
 
@@ -271,3 +274,82 @@ def test_retrieval_request_rejects_blank_question() -> None:
                 version=2025,
             ),
         )
+
+
+def test_load_or_build_retriever_uses_existing_index(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    expected_retriever = object()
+    load_retriever = Mock(return_value=expected_retriever)
+    build_index = Mock()
+
+    monkeypatch.setattr(
+        retriever_module,
+        "load_default_retriever",
+        load_retriever,
+    )
+    monkeypatch.setattr(
+        retriever_module,
+        "build_semantic_index",
+        build_index,
+    )
+
+    result = load_or_build_default_retriever()
+
+    assert result is expected_retriever
+    load_retriever.assert_called_once_with()
+    build_index.assert_not_called()
+
+
+def test_load_or_build_retriever_builds_missing_index_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    expected_retriever = object()
+    load_retriever = Mock(
+        side_effect=(
+            FileNotFoundError("Index absent."),
+            expected_retriever,
+        )
+    )
+    build_index = Mock()
+
+    monkeypatch.setattr(
+        retriever_module,
+        "load_default_retriever",
+        load_retriever,
+    )
+    monkeypatch.setattr(
+        retriever_module,
+        "build_semantic_index",
+        build_index,
+    )
+
+    result = load_or_build_default_retriever()
+
+    assert result is expected_retriever
+    assert load_retriever.call_count == 2
+    build_index.assert_called_once_with()
+
+
+def test_load_or_build_retriever_does_not_hide_invalid_index(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    load_retriever = Mock(side_effect=ValueError("Empreinte invalide."))
+    build_index = Mock()
+
+    monkeypatch.setattr(
+        retriever_module,
+        "load_default_retriever",
+        load_retriever,
+    )
+    monkeypatch.setattr(
+        retriever_module,
+        "build_semantic_index",
+        build_index,
+    )
+
+    with pytest.raises(ValueError, match="Empreinte invalide"):
+        load_or_build_default_retriever()
+
+    load_retriever.assert_called_once_with()
+    build_index.assert_not_called()
